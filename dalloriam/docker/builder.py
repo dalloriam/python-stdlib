@@ -20,3 +20,12 @@ def build(build_path: str, image_name: str, tag: str = 'latest') -> None:
             image_name,
             '.'
         ], silent=True)
+
+
+def push(image_name: str, tag: str = 'latest'):
+    image_name = f'{image_name}{tag}'
+    shell.run([
+        'docker',
+        'push',
+        image_name
+    ], silent=False)
