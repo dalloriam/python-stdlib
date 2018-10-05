@@ -25,8 +25,8 @@ def test_run(silent: bool, arguments: List[str], want_stdout: bool, status: int,
             assert mock_call.call_args[0][0] == arguments
 
             if want_err:
-                pytest.fail(f'expected an exception for status {status}.')
+                pytest.fail(f'expected an exception for status {status}.')  # pragma: nocover
 
     except OSError:
         if not want_err:
-            pytest.fail(f'did not expect exception for status {status}.')
+            pytest.fail(f'did not expect exception for status {status}.')  # pragma: nocover
