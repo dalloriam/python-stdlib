@@ -1,5 +1,7 @@
 from flask import Flask, Response
 
+from functools import wraps
+
 from http import HTTPStatus
 
 import json
@@ -16,6 +18,7 @@ class API:
 
     def route(self, rule, **kwargs):
         def decorator(fn):
+            @wraps(fn)
             def internal():
                 try:
                     data = fn()
