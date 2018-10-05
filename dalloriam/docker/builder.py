@@ -23,7 +23,7 @@ def build(build_path: str, image_name: str, tag: str = 'latest') -> None:
 
 
 def push(image_name: str, tag: str = 'latest'):
-    image_name = f'{image_name}{tag}'
+    image_name = f'{image_name}:{tag}'
     shell.run([
         'docker',
         'push',
