@@ -15,6 +15,10 @@ class API:
         self._debug = debug
 
         self._flask: Flask = Flask(__name__)
+        self.health = self.route('/health')(self.health)
+
+    def health(self):
+        return {'status': 'healthy'}
 
     def route(self, rule, **kwargs):
         def decorator(fn):
