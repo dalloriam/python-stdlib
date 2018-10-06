@@ -11,11 +11,15 @@ class DatahoseClient:
             'Authorization': password
         }
 
-    def push(self, key: str, data: dict) -> None:
-        resp = requests.post(self._push_url, json={
+    def push(self, key: str, data: dict, time: float = None) -> None:
+        data = {
             'key': key,
             'body': data
-        }, headers=self._headers)
+        }
+        if time is not None:
+            data['time'] = time
+
+        resp = requests.post(self._push_url, json=data, headers=self._headers)
 
         if resp.status_code != 200:
             raise ValueError(resp.text)
