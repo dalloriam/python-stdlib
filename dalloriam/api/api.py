@@ -28,6 +28,7 @@ class API:
                     data = fn()
                     return Response(json.dumps(data), content_type='application/json')
                 except Exception as e:
+                    print(f'ERROR: {e}')
                     return Response(
                         json.dumps({'error': str(e)}),
                         status=HTTPStatus.INTERNAL_SERVER_ERROR,
