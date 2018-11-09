@@ -21,7 +21,6 @@ setup(
     description='Personal standard library.',
     long_description=readme,
     install_requires=[
-        'flask',
         'requests',
         'sh'
     ]

@@ -33,10 +33,6 @@ class DockerClient:
     def _format_image_name(image_name: str, tag: str) -> str:
         return f'{image_name}:{tag}'
 
-    @staticmethod
-    def _generate_random_name(length: int = 12) -> str:
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
     def _login(self) -> None:
         args = []
 
@@ -49,7 +45,7 @@ class DockerClient:
         if self._server:
             args.append(self._server)
 
-        sh.docker.login(*args)
+        sh.docker('login', *args)
 
     def build(self, content_dir: str, image_name: str, tag: str = 'latest') -> None:
         """
@@ -60,7 +56,7 @@ class DockerClient:
             tag (str):        Desired tag of the built image.
         """
         with filesystem.location(os.path.abspath(content_dir)):
-            sh.docker.build('-t', self._format_image_name(image_name, tag), '.')
+            sh.docker('build', '-t', self._format_image_name(image_name, tag), '.')
 
     def push(self, image_name: str, tag: str = 'latest') -> None:
         """
@@ -69,7 +65,7 @@ class DockerClient:
             image_name (str): Name of the image to push.
             tag (str): Tag of the image.
         """
-        sh.docker.push(self._format_image_name(image_name, tag))
+        sh.docker('push', self._format_image_name(image_name, tag))
 
     @contextmanager
     def container(
