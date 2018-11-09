@@ -1,8 +1,7 @@
-from dalloriam.shell import run
-
 from typing import Iterable, Dict
 
 import random
+import sh
 import string
 
 
@@ -13,15 +12,15 @@ def _random_name(size: int = 12) -> str:
 class Container:
 
     def __init__(self, image_name: str, tag: str) -> None:
-        self.name = f'{image_name}-{_random_name()}'
+        self.name = f'{image_name.split("/")[-1]}-{_random_name()}'
         self._image = f'{image_name}:{tag}'
 
     def start(self, ports: Dict[int, int] = None, volumes: Dict[str, str] = None) -> None:
         """
         Starts the container.
         Args:
-            ports: The port mappings.
-            volumes: The volume mappings.
+            ports (Dict[int, int]): The port mappings.
+            volumes (Dict[str, str]): The volume mappings.
         """
         ports_lst = []
         if ports is not None:
@@ -35,39 +34,21 @@ class Container:
                 vol_lst.append('-v')
                 vol_lst.append(f'{k}:{v}')
 
-        run([
-            'docker',
-            'run',
-            '--rm',
-            '-d',
-            *ports_lst,
-            *vol_lst,
-            '--name',
-            self.name,
-            self._image
-        ], silent=True)
+        sh.docker.run('--rm', '-d', *ports_lst, *vol_lst, '--name', self.name, self._image)
 
     def stop(self) -> None:
         """
         Stops the container.
         """
-        run([
-            'docker',
-            'stop',
-            self.name
-        ], silent=True)
+        sh.docker.stop(self.name)
 
     def exec(self, cmd: Iterable[str], background: bool = False) -> None:
         """
         Executes a command inside the container
         Args:
-            cmd: The command arguments.
-            background: Whether to execute the command in the background or to await the results.
+            cmd (Iterable[str]): The command arguments.
+            background (bool): Whether to execute the command in the background or to await the results.
         """
-        run([
-            'docker',
-            'exec',
-            '-d' if background else '-i',
-            self.name,
-            *cmd
-        ], silent=False)
+        out = sh.docker.exec('-d' if background else '-i', self.name, *cmd)
+        if not background:
+            print(out)
