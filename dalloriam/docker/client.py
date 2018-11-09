@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from dalloriam import filesystem, shell
+from dalloriam import filesystem
 from dalloriam.docker.container import Container
 
 from typing import Dict, Iterator
@@ -8,6 +8,7 @@ from typing import Dict, Iterator
 import os
 import random
 import string
+import sh
 import time
 
 
@@ -17,9 +18,9 @@ class DockerClient:
         """
         Initializes the client
         Args:
-            username: Docker repository username.
-            password: Docker repository password.
-            server: Docker repository URL.
+            username (str): Docker repository username.
+            password (str): Docker repository password.
+            server (str): Docker repository URL.
         """
         self._username = username
         self._password = password
@@ -37,10 +38,7 @@ class DockerClient:
         return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
     def _login(self) -> None:
-        args = [
-            'docker',
-            'login'
-        ]
+        args = []
 
         if self._username:
             args += ['-u', self._username]
@@ -51,37 +49,27 @@ class DockerClient:
         if self._server:
             args.append(self._server)
 
-        shell.run(args, silent=False)
+        sh.docker.login(*args)
 
     def build(self, content_dir: str, image_name: str, tag: str = 'latest') -> None:
         """
         Builds a docker image from a directory.
         Args:
-            content_dir: Path that contains the image-related files.
-            image_name: Desired name of the built image.
-            tag:        Desired tag of the built image.
+            content_dir (str): Path that contains the image-related files.
+            image_name (str): Desired name of the built image.
+            tag (str):        Desired tag of the built image.
         """
         with filesystem.location(os.path.abspath(content_dir)):
-            shell.run([
-                'docker',
-                'build',
-                '-t',
-                self._format_image_name(image_name, tag),
-                '.'
-            ], silent=True)
+            sh.docker.build('-t', self._format_image_name(image_name, tag), '.')
 
     def push(self, image_name: str, tag: str = 'latest') -> None:
         """
         Pushes a docker image to the target repository
         Args:
-            image_name: Name of the image to push.
-            tag: Tag of the image.
+            image_name (str): Name of the image to push.
+            tag (str): Tag of the image.
         """
-        shell.run([
-            'docker',
-            'push',
-            self._format_image_name(image_name, tag)
-        ], silent=False)
+        sh.docker.push(self._format_image_name(image_name, tag))
 
     @contextmanager
     def container(
@@ -93,10 +81,10 @@ class DockerClient:
         """
         Start a container with the specified configuration in a context.
         Args:
-            image_name: Name of the image to start.
-            tag: Tag of the image to start.
-            ports: Port mappings.
-            volumes: Volume mappings.
+            image_name (str): Name of the image to start.
+            tag (str): Tag of the image to start.
+            ports (Dict[int, int]): Port mappings.
+            volumes (Dict[str, str]): Volume mappings.
 
         Returns:
             Running container.
@@ -104,5 +92,7 @@ class DockerClient:
         c = Container(image_name=image_name, tag=tag)
         c.start(ports, volumes)
         time.sleep(2)
-        yield c
-        c.stop()
+        try:
+            yield c
+        finally:
+            c.stop()

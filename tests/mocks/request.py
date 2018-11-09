@@ -1,6 +1,3 @@
-from dataclasses import dataclass
-
-
-@dataclass
 class MockRequest:
-    headers: dict
+    def __init__(self, headers: dict):
+        self.headers = headers

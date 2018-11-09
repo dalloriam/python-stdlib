@@ -28,32 +28,32 @@ def test_client_build_calls_shell_run_properly():
     client = docker.Client()
 
     with mock.patch.object(docker.client.filesystem, 'location', mock_location),\
-             mock.patch.object(docker.client.shell, 'run') as mock_run:
+             mock.patch.object(docker.client.sh.docker, 'build') as mock_run:
         client.build('some_path', 'my_image', 'mytag')
         mock_run.assert_called_once()
 
-        mock_run.assert_called_with(['docker', 'build', '-t', 'my_image:mytag', '.'], silent=True)
+        mock_run.assert_called_with('-t', 'my_image:mytag', '.')
 
 
 def test_client_build_sets_default_tag():
     client = docker.Client()
 
     with mock.patch.object(docker.client.filesystem, 'location', mock_location), \
-            mock.patch.object(docker.client.shell, 'run') as mock_run:
+            mock.patch.object(docker.client.sh, 'docker') as mock_run:
         client.build('some_path', 'my_image')
         mock_run.assert_called_once()
 
-        mock_run.assert_called_with(['docker', 'build', '-t', 'my_image:latest', '.'], silent=True)
+        mock_run.assert_called_with('build', '-t', 'my_image:latest', '.')
 
 
 def test_client_push_calls_correct_command():
     client = docker.Client()
 
-    with mock.patch.object(docker.client.shell, 'run') as mock_run:
+    with mock.patch.object(docker.client.sh, 'docker') as mock_run:
         client.push('someuser/some_image', 'some_tag')
         mock_run.assert_called_once()
 
-        mock_run.assert_called_with(['docker', 'push', 'someuser/some_image:some_tag'], silent=False)
+        mock_run.assert_called_with('push', 'someuser/some_image:some_tag')
 
 
 def test_client_container_initializes_container_correctly():
