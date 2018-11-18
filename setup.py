@@ -20,5 +20,5 @@ setup(
     license='MIT',
     description='Personal standard library.',
     long_description=readme,
-    install_requires=['requests']
+    install_requires=['requests', 'sh']
 )
