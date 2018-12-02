@@ -27,6 +27,14 @@ class DatahoseClient:
                     raise ValueError(
                         f'Missing service_host, either in params or in config file ([{DATAHOSE_CONFIG_PATH}]).'
                     )
+                service_host = cfg_dict['service_host']
+
+            if not password:
+                if 'password' not in cfg_dict:
+                    raise ValueError(
+                        f'Missing password, either in params or in config file ([{DATAHOSE_CONFIG_PATH}]).'
+                    )
+                password = cfg_dict['password']
 
         self._push_url = service_host
 
