@@ -29,7 +29,7 @@ def test_client_init_calls_login_when_required(mock_login: mock.MagicMock):
 def test_client_build_calls_shell_run_properly():
     client = docker.Client()
 
-    with mock.patch.object(docker.client.filesystem, 'location', mock_location),\
+    with mock.patch.object(docker.client.system, 'location', mock_location),\
              mock.patch('sh.docker', create=True) as mock_run:
         client.build('some_path', 'my_image', 'mytag')
         mock_run.assert_called_once()
@@ -40,7 +40,7 @@ def test_client_build_calls_shell_run_properly():
 def test_client_build_sets_default_tag():
     client = docker.Client()
 
-    with mock.patch.object(docker.client.filesystem, 'location', mock_location), \
+    with mock.patch.object(docker.client.system, 'location', mock_location), \
             mock.patch('sh.docker', create=True) as mock_run:
         client.build('some_path', 'my_image')
         mock_run.assert_called_once()

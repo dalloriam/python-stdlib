@@ -1,4 +1,4 @@
-from dalloriam.filesystem import path
+from dalloriam.system import path
 
 from unittest import mock
 
