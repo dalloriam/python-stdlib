@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from dalloriam import filesystem
+from dalloriam import system
 from dalloriam.docker.container import Container
 
 from typing import Dict, Iterator
@@ -55,7 +55,7 @@ class DockerClient:
             image_name (str): Desired name of the built image.
             tag (str):        Desired tag of the built image.
         """
-        with filesystem.location(os.path.abspath(content_dir)):
+        with system.location(os.path.abspath(content_dir)):
             sh.docker('build', '-t', self._format_image_name(image_name, tag), '.')
 
     def push(self, image_name: str, tag: str = 'latest') -> None:
