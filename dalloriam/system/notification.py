@@ -12,4 +12,5 @@ def notification(title: str, message: str) -> None:
     if sys.platform == 'linux':
         subprocess.Popen(['notify-send', title, message])
     else:
+        # TODO: Support macOS
         raise NotImplementedError

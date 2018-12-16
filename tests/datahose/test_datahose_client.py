@@ -2,6 +2,8 @@ from dalloriam.datahose import DatahoseClient
 
 from tests.mocks.response import MockResponse
 
+from typing import Any, Dict, Optional
+
 from unittest import mock
 
 import pytest
@@ -62,3 +64,32 @@ def test_datahose_notify_preformats_body_for_push():
             'sender': 'some_sender',
             'message': 'some_message'
         })
+
+
+@mock.patch('dalloriam.datahose.client.DatahoseClient._try_get_disk_config', {'service_host': 'hello', 'password': 'word'})
+@pytest.mark.parametrize(
+    'disk_data, provided_args,want_err',
+    [
+        ({'service_host': 'my_host', 'password': 'pwd'}, {}, None),
+        ({'service_host': 'my_host'}, {'password': 'pwd'}, None),
+        ({}, {'service_host': 'my_host', 'password': 'pwd'}, None),
+        ({}, {'password': 'pwd'}, ValueError),
+        ({'service_host': 'my_host'}, {}, ValueError),
+    ]
+)
+def test_datahose_initialize_config_autodetect(disk_data: Dict[str, Any], provided_args: Dict[str, Any],
+                                               want_err: Optional[Exception]):
+    with mock.patch('dalloriam.datahose.client.DatahoseClient._try_get_disk_config', return_value=disk_data):
+        if want_err is None:
+            try:
+                c = DatahoseClient(**provided_args)
+                assert c._push_url is not None
+                assert c._push_url == disk_data.get('service_host') or provided_args.get('service_host')
+
+                assert c._headers.get('Authorization') is not None
+                assert c._headers.get('Authorization') == disk_data.get('password') or provided_args.get('password')
+            except Exception as e:  # pragma: nocover
+                pytest.fail(f'datahose client should not have raised [{type(e)}]')  # pragma: nocover
+        else:
+            with pytest.raises(want_err):
+                DatahoseClient(**provided_args)
