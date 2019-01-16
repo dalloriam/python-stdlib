@@ -19,6 +19,11 @@ class User:
     permissions: List[str] = field(default_factory=lambda: [])
     services: Dict[str, Dict[str, Any]] = field(default_factory=lambda: {})
 
+    def save(self) -> None:
+        entity = datastore.Entity(User._ds.key('User', self.uid))
+        entity.update(**{'permissions': self.permissions, 'services': self.services})
+        User._ds.put(entity)
+
     @property
     def serialized(self) -> Dict[str, Any]:
         """
