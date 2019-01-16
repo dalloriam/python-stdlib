@@ -4,10 +4,14 @@ from dataclasses import dataclass, field
 
 from google.cloud import datastore
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import google.auth.transport.requests
 import google.oauth2.id_token
+import requests
+
+
+FIREBASE_AUTH_URL = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key={API_KEY}"
 
 
 @dataclass
@@ -71,7 +75,33 @@ class User:
         return User(uid=user_id, **user_info)
 
     @staticmethod
-    def from_token(token: str, refresh_token: str = None) -> 'User':
+    def get_token(api_key: str, email: str, password: str) -> Tuple[str, Tuple[str, str]]:
+        """
+        Authenticate against firebase and get token & refresh.
+        Args:
+            api_key (str): The firebase API key.
+            email (str): The user email.
+            password (str): The user password.
+
+        Returns:
+            The user ID and the ID / refresh tokens.
+        """
+        payload = {
+            'email': email,
+            'password': password,
+            'returnSecureToken': True
+        }
+
+        response = requests.post(FIREBASE_AUTH_URL.format(API_KEY=api_key), json=payload)
+        data = response.json()
+
+        user_id = data['localId']
+        id_token = data['idToken']
+        refresh_token = data['refreshToken']
+        return user_id, (id_token, refresh_token)
+
+    @staticmethod
+    def from_token(token: str) -> 'User':
         """
         Validate an auth token & return the claims. Can only be called in an HTTP context.
         Args:
