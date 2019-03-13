@@ -12,7 +12,17 @@ _ORC_URL = "http://localhost:{port}"
 
 class ORCClient:
 
-    def __init__(self, port=33000, check_liveness=True):
+    """
+    ORC Client interfaces with the ORC personal orchestrator.
+    """
+
+    def __init__(self, port: int = 33000, check_liveness: bool = True):
+        """
+        Constructor.
+        Args:
+            port (int): The port where ORC is running.
+            check_liveness (bool): Whether to check if ORC is alive when starting the client.
+        """
         self._orc_url = _ORC_URL.format(port=port)
         self._supported_actions: Dict[str, List[str]] = {}
 
@@ -43,6 +53,10 @@ class ORCClient:
 
     @property
     def is_alive(self) -> bool:
+        """
+        Returns:
+            Whether the ORC server could be found.
+        """
         try:
             self._request('GET', '/')
         except ORCException:
@@ -51,35 +65,45 @@ class ORCClient:
 
     @property
     def supported_actions(self) -> Dict[str, List[str]]:
+        """
+        Returns:
+            A dictionary of actions supported by the ORC server.
+        """
         if not self._supported_actions:
             self._supported_actions = self._request('GET', '/manage/actions_available')
 
         return self._supported_actions
 
     def supports(self, action_tag: str) -> bool:
+        """
+        Checks if an action is supported.
+        Args:
+            action_tag (str): The action to validate.
+
+        Returns:
+            Whether the action is supported.
+        """
         module, action = self._parse_action_tag(action_tag)
         return module in self.supported_actions and action in self.supported_actions[module]
 
-    def do(self, action_tag: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
+    def do(self, action_tag: str, **data: Any) -> Dict[str, Any]:
+        """
+        Perform an action.
+        Args:
+            action_tag (str): The action to execute.
+            **data (Dict[str, Any]): The arguments to send to the action.
+
+        Returns:
+            The return payload of the action.
+        """
         if not self.supports(action_tag):
             raise ORCException(f'Unsupported action: {action_tag}')
 
         return self._request('POST', f'/{action_tag}', body=data or {})
 
-    # === Keyval module shortcuts ===
+    def __getattr__(self, item: str) -> Any:
+        if item in {'do', 'supports', 'supported_actions', 'is_alive', '_request', '_parse_action_tag'}:
+            return super().__getattribute__(item)
 
-    def __getitem__(self, item: str) -> Any:
-        try:
-            return self.do('keyval/get', {'key': item})['value']
-        except ORCException:
-            raise KeyError(item)
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        self.do('keyval/set', {'key': key, 'val': value})
-
-    def __delitem__(self, key: str) -> None:
-        self.do('keyval/del', {'key': key})
-
-    def __contains__(self, item: str) -> bool:
-        # TODO: This is not super optimal, to improve once keyval support fast lookups.
-        return item in self.do('keyval/list')['values']
+        fn = lambda **x: self.do(item.replace('_', '/'), **x)
+        return fn

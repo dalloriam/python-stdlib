@@ -17,16 +17,25 @@ FIREBASE_AUTH_URL = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/
 @dataclass
 class User:
 
-    _ds = datastore.Client()
+    _client = None
 
     uid: str
     permissions: List[str] = field(default_factory=lambda: [])
     services: Dict[str, Dict[str, Any]] = field(default_factory=lambda: {})
 
+    @staticmethod
+    def _ds():
+        if User._client is None:
+            User._client = datastore.Client()
+        return User._client
+
     def save(self) -> None:
-        entity = datastore.Entity(User._ds.key('User', self.uid))
+        """
+        Save the user info to the authentication provider.
+        """
+        entity = datastore.Entity(User._ds().key('User', self.uid))
         entity.update(**{'permissions': self.permissions, 'services': self.services})
-        User._ds.put(entity)
+        User._ds().put(entity)
 
     @property
     def serialized(self) -> Dict[str, Any]:
@@ -43,17 +52,17 @@ class User:
 
     @staticmethod
     def _try_get_user_info(user_id: str) -> Dict[str, Any]:
-        return User._ds.get(User._ds.key('User', user_id))
+        return User._ds().get(User._ds().key('User', user_id))
 
     @staticmethod
     def _create_default_user(user_id: str) -> Dict[str, Any]:
-        entity = datastore.Entity(User._ds.key('User', user_id))
+        entity = datastore.Entity(User._ds().key('User', user_id))
         default_info = {
             'permissions': [],
             'services': {}
         }
         entity.update(**default_info)
-        User._ds.put(entity)
+        User._ds().put(entity)
         return default_info
 
     @staticmethod
