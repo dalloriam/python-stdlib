@@ -7,7 +7,7 @@ from http import HTTPStatus
 import requests
 
 
-_ORC_URL = "http://localhost:{port}"
+_ORC_URL = "http://{host}:{port}"
 
 
 class ORCClient:
@@ -16,14 +16,15 @@ class ORCClient:
     ORC Client interfaces with the ORC personal orchestrator.
     """
 
-    def __init__(self, port: int = 33000, check_liveness: bool = True):
+    def __init__(self, host: str = 'localhost', port: int = 33000, check_liveness: bool = True):
         """
         Constructor.
         Args:
+            host (str): The host where ORC is running.
             port (int): The port where ORC is running.
             check_liveness (bool): Whether to check if ORC is alive when starting the client.
         """
-        self._orc_url = _ORC_URL.format(port=port)
+        self._orc_url = _ORC_URL.format(host=host, port=port)
         self._supported_actions: Dict[str, List[str]] = {}
 
         if check_liveness and not self.is_alive:
