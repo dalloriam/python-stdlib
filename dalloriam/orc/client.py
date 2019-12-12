@@ -106,5 +106,4 @@ class ORCClient:
         if item in {'do', 'supports', 'supported_actions', 'is_alive', '_request', '_parse_action_tag'}:
             return super().__getattribute__(item)
 
-        fn = lambda **x: self.do(item.replace('_', '/'), **x)
-        return fn
+        return lambda **x: self.do(item.replace('_', '/'), **x)

@@ -1,9 +1,9 @@
 import json
-import requests
 import os
 
+import requests
 
-DATAHOSE_CONFIG_PATH = os.path.expanduser('~/.config/dalloriam/datahose.json')
+DATAHOSE_CONFIG_PATH = os.path.expanduser("~/.config/dalloriam/datahose.json")
 
 
 class DatahoseClient:
@@ -12,40 +12,47 @@ class DatahoseClient:
     The DatahoseClient allows for easy interfacing with the cloud datahose.
     """
 
-    def __init__(self, service_host: str = None, password: str = None) -> None:
+    def __init__(
+        self, service_host: str = None, email: str = None, password: str = None
+    ) -> None:
         """
         Constructor
         Args:
             service_host (Optional[str]): Datahose endpoint
+            email (Optional[str]): Datahose email.
             password (Optional[str]): Datahose password.
         """
         if not (service_host and password):
             cfg_dict = self._try_get_disk_config()
 
             if not service_host:
-                if 'service_host' not in cfg_dict:
+                if "service_host" not in cfg_dict:
                     raise ValueError(
-                        f'Missing service_host, either in params or in config file ([{DATAHOSE_CONFIG_PATH}]).'
+                        f"Missing service_host, either in params or in config file ([{DATAHOSE_CONFIG_PATH}])."
                     )
-                service_host = cfg_dict['service_host']
+                service_host = cfg_dict["service_host"]
 
             if not password:
-                if 'password' not in cfg_dict:
+                if "password" not in cfg_dict:
                     raise ValueError(
-                        f'Missing password, either in params or in config file ([{DATAHOSE_CONFIG_PATH}]).'
+                        f"Missing password, either in params or in config file ([{DATAHOSE_CONFIG_PATH}])."
                     )
-                password = cfg_dict['password']
+                password = cfg_dict["password"]
+
+            if not email:
+                if "email" not in cfg_dict:
+                    raise ValueError(
+                        f"Missing email, either in params or in config file ([{DATAHOSE_CONFIG_PATH}])."
+                    )
+                email = cfg_dict["email"]
 
         self._push_url = service_host
-
-        self._headers = {
-            'Authorization': password
-        }
+        self._headers = {"Authorization": "UPW {0} {1}".format(email, password)}
 
     @staticmethod
     def _try_get_disk_config() -> dict:
         if os.path.isfile(DATAHOSE_CONFIG_PATH):
-            with open(DATAHOSE_CONFIG_PATH, 'r') as infile:
+            with open(DATAHOSE_CONFIG_PATH, "r") as infile:
                 return json.load(infile)
         return {}
 
@@ -57,12 +64,9 @@ class DatahoseClient:
             data (dict): The event data.
             time (float): The time at which the event occured.
         """
-        data = {
-            'key': key,
-            'body': data
-        }
+        data = {"key": key, "body": data}
         if time is not None:
-            data['time'] = time
+            data["time"] = time
 
         resp = requests.post(self._push_url, json=data, headers=self._headers)
 
@@ -76,8 +80,5 @@ class DatahoseClient:
             sender (str): Sender of the notification.
             message (str): Markdown-formatted message to send.
         """
-        data = {
-            'sender': sender,
-            'message': message
-        }
-        self.push('notification', data=data)
+        data = {"sender": sender, "message": message}
+        self.push("notification", data=data)
